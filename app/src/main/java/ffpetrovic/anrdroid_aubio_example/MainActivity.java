@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     public long ptr = 0;
     public long input = 0;
     public long pitch = 0;
+    public long tempo = 0;
 
     public boolean      isRecording = false;
     private AudioRecord audioRecord = null;
@@ -60,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void init() {
         sampleRate = 44100;
-        bufferSize = 4096;
+        bufferSize = 1024;
         readSize = bufferSize / 4;
         buffer = new float[readSize];
         intermediaryBuffer = new short[readSize];
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
             isRecording = true;
 //        sampleRate = AudioUtils.getSampleRate();
 //        bufferSize = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_DEFAULT, AudioFormat.ENCODING_PCM_16BIT);
-            initPitch(sampleRate, bufferSize);
+            initTempo(sampleRate, bufferSize);
             audioRecord = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, sampleRate, AudioFormat.CHANNEL_IN_DEFAULT,
                     AudioFormat.ENCODING_PCM_16BIT, bufferSize);
             audioRecord.startRecording();
@@ -90,11 +91,14 @@ public class MainActivity extends AppCompatActivity {
         while (isRecording) {
             amountRead = audioRecord.read(intermediaryBuffer, 0, readSize);
             buffer = shortArrayToFloatArray(intermediaryBuffer);
-            final float frequency = getPitch(buffer);
+            final float frequency = getTempo(buffer);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    ((TextView) findViewById(R.id.pitchView)).setText(String.valueOf(frequency));
+                    if (frequency != 0) {
+                        ((TextView) findViewById(R.id.pitchView)).setText(String.valueOf(frequency));
+                    }
+
                 }
             });
         }
@@ -108,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
         return fArray;
     }
 
-    private native float    getPitch(float[] input);
-    private native void     initPitch(int sampleRate, int B);
-    private native void     cleanupPitch();
+    private native float    getTempo(float[] input);
+    private native void     initTempo(int sampleRate, int B);
 }
